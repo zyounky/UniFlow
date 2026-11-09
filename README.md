@@ -37,13 +37,14 @@ Invoke-RestMethod http://127.0.0.1:8080/tasks
 
 Откройте папку `android/` в Android Studio, дождитесь синхронизации Gradle и запустите конфигурацию `app` на эмуляторе. Эмулятор обращается к серверу на компьютере по адресу `http://10.0.2.2:8080`.
 
-Для физического устройства с USB-отладкой выполните `adb reverse tcp:8080 tcp:8080` (ADB входит в Android SDK Platform-Tools) и укажите адрес в `android/gradle.properties`.
+Для физического устройства с USB-отладкой выполните `adb reverse tcp:8080 tcp:8080` (ADB входит в Android SDK Platform-Tools). Установите приложение с адресом сервера на телефоне.
 
-```properties
-uniflowApiBaseUrl=http://127.0.0.1:8080
+```powershell
+cd android
+.\gradlew.bat :app:installDebug "-PuniflowApiBaseUrl=http://127.0.0.1:8080"
 ```
 
-То же значение можно передать Gradle через `-PuniflowApiBaseUrl=http://127.0.0.1:8080`. После смены адреса пересоберите и установите приложение.
+Для сборки из Android Studio задайте `uniflowApiBaseUrl=http://127.0.0.1:8080` в пользовательском `gradle.properties` в каталоге Gradle User Home. После смены адреса пересоберите и установите приложение.
 
 Во вкладке «Задания» можно создать задание, отметить его выполненным или удалить. Для этих действий требуется работающий сервер. Если соединение пропало, приложение показывает сохранённый список и позволяет повторить загрузку.
 
@@ -54,16 +55,16 @@ uniflowApiBaseUrl=http://127.0.0.1:8080
 Перед запуском сервера задайте секрет в его терминале. Используйте своё случайное значение.
 
 ```powershell
-$env:UNIFLOW_BOT_SECRET = Read-Host "Секрет для сервера и бота"
+$env:UNIFLOW_BOT_SECRET = [Net.NetworkCredential]::new('', (Read-Host "Секрет для сервера и бота" -AsSecureString)).Password
 .\gradlew.bat run
 ```
 
 В другом терминале из папки `backend/` задайте токен, ID чата и тот же секрет.
 
 ```powershell
-$env:TELEGRAM_BOT_TOKEN = Read-Host "Токен Telegram-бота"
+$env:TELEGRAM_BOT_TOKEN = [Net.NetworkCredential]::new('', (Read-Host "Токен Telegram-бота" -AsSecureString)).Password
 $env:ALLOWED_CHAT_ID = Read-Host "ID разрешённого личного чата"
-$env:UNIFLOW_BOT_SECRET = Read-Host "Тот же секрет"
+$env:UNIFLOW_BOT_SECRET = [Net.NetworkCredential]::new('', (Read-Host "Тот же секрет" -AsSecureString)).Password
 .\gradlew.bat runBot
 ```
 
@@ -98,6 +99,14 @@ $env:UNIFLOW_BOT_SECRET = Read-Host "Тот же секрет"
 ```
 
 API Android рассчитан на локальный запуск по HTTP. Внутренний маршрут `POST /telegram/tasks` требует секрет в заголовке `X-Bot-Secret`.
+
+## Личные данные
+
+При публикации исходников оставляйте сервер привязанным к `127.0.0.1`. Маршруты `/tasks` доступны без входа в аккаунт, поэтому порт сервера предназначен для локального подключения.
+
+Храните токен бота, ID чата и секрет в переменных окружения. Для локальных настроек и выгрузок в рабочей папке можно использовать каталог `local-data/`, который игнорирует Git. Для коммитов используйте адрес `noreply` из настроек GitHub, задав его локально для этого репозитория.
+
+Для резервной копии остановите сервер и скопируйте рабочий файл SQLite за пределы репозитория. Серверная база хранит оригиналы заданий. Кэш заданий исключён из резервных копий Android и переноса между устройствами. После переустановки приложение заново загружает список с сервера.
 
 ## Сборка и тесты
 
