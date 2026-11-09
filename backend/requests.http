@@ -1,0 +1,9 @@
+POST http://127.0.0.1:8080/tasks
+Content-Type: application/json
+
+{
+  "subject": "Физика",
+  "title": "Сделать лабораторную",
+  "deadline": "20 сентября",
+  "isCompleted": false
+}

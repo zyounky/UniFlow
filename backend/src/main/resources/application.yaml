@@ -1,0 +1,7 @@
+ktor:
+  deployment:
+    host: 127.0.0.1
+    port: 8080
+  application:
+    modules:
+      - com.example.uniflow.MainKt.module
